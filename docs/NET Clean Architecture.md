@@ -115,20 +115,6 @@ Use Clean Architecture when:
 
 ---
 
-#### 14. Interview questions
-- What is the Dependency Rule in Clean Architecture?  
-- How do you structure a .NET solution for Clean Architecture?  
-- How do you prevent EF Core from leaking into domain models?  
-- Explain Ports and Adapters with an example.  
-- When would Clean Architecture be overkill?  
-- How do you implement transactions and unit of work?  
-- How do you test application services in isolation?  
-- Explain how to implement CQRS in Clean Architecture.  
-
-(See section 21 for expert Q&A with sample answers and code snippets.)
-
----
-
 #### 15. How would a Solution Architect explain and design it?
 A Solution Architect would:
 - **Identify bounded contexts** and domain boundaries.  
