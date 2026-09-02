@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.NET Clean Architecture</title>
+    <style>
+        :root {
+            --primary: #512bd4; /* .NET Purple */
+            --bg-color: #f8f9fa;
+            --text-main: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .hero {
+            background-color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 1rem auto 0;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 2rem auto;
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .layer-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .layer-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .layer-btn.active {
+            border-color: var(--primary);
+            background-color: #f3f0ff;
+            border-left: 5px solid var(--primary);
+        }
+
+        .layer-btn h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.2rem;
+        }
+
+        .layer-btn p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Content Panel */
+        .content-panel {
+            flex: 2;
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-panel h2 {
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .code-container {
+            margin-top: 1.5rem;
+            background: var(--code-bg);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            flex-grow: 1;
+        }
+
+        pre {
+            margin: 0;
+        }
+
+        code {
+            font-family: 'Consolas', 'Monaco', monospace;
+            color: var(--code-text);
+            font-size: 0.9rem;
+        }
+
+        /* Utility */
+        .hidden {
+            display: none !important;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 4rem 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1>.NET Clean Architecture</h1>
+        <p>Build maintainable, testable, and scalable applications by separating concerns into distinct layers.</p>
+    </div>
+
+    <div class="container">
+        <!-- Interactive Layer Selection -->
+        <div class="sidebar" id="layer-nav">
+            <!-- Buttons injected via JS -->
+        </div>
+
+        <!-- Dynamic Content Display -->
+        <div class="content-panel">
+            <div id="empty-state" class="empty-state">
+                <h3>Select a layer from the left to view details and code snippets.</h3>
+            </div>
+            
+            <div id="layer-details" class="hidden">
+                <h2 id="panel-title">Layer Title</h2>
+                <p id="panel-desc">Layer Description</p>
+                
+                <div class="code-container">
+                    <pre><code id="panel-code"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Model representing the architecture layers
+        const architectureData = [
+            {
+                id: 'domain',
+                title: 'Domain Layer',
+                summary: 'Entities, Interfaces, and Business Rules.',
+                description: 'The absolute core of the application. It contains enterprise-wide logic and types. This layer has zero external dependencies—it does not know about databases, UI, or frameworks.',
+                code: `public class Order 
+{
+    public Guid Id { get; private set; }
+    public DateTime OrderDate { get; private set; }
+    public string CustomerId { get; private set; }
+    public OrderStatus Status { get; private set; }
+    
+    private readonly List<OrderItem> _items = new();
+    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+
+    public Order(string customerId)
+    {
+        Id = Guid.NewGuid();
+        CustomerId = customerId;
+        OrderDate = DateTime.UtcNow;
+        Status = OrderStatus.Pending;
+    }
+
+    public void AddItem(Guid productId, decimal unitPrice, int quantity)
+    {
+        // Encapsulated business logic
+        _items.Add(new OrderItem(productId, unitPrice, quantity));
+    }
+}`
+            },
+            {
+                id: 'application',
+                title: 'Application Layer',
+                summary: 'Use Cases and Orchestration.',
+                description: 'Contains application-specific business rules. It implements the use cases of the system, orchestrating the flow of data to and from the domain entities. It depends on the Domain layer, but not on Infrastructure.',
+                code: `public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>
+{
+    private readonly IOrderRepository _repository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateOrderCommandHandler(IOrderRepository repository, IUnitOfWork unitOfWork)
+    {
+        _repository = repository;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<Guid> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    {
+        var order = new Order(request.CustomerId);
+        
+        foreach(var item in request.Items)
+        {
+            order.AddItem(item.ProductId, item.Price, item.Quantity);
+        }
+
+        _repository.Add(order);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return order.Id;
+    }
+}`
+            },
+            {
+                id: 'infrastructure',
+                title: 'Infrastructure Layer',
+                summary: 'Databases, External Services, and Frameworks.',
+                description: 'Contains all implementation details. This includes database access (EF Core), file systems, external API clients, and identity providers. It implements interfaces defined in the Application layer.',
+                code: `public class OrderRepository : IOrderRepository
+{
+    private readonly ApplicationDbContext _dbContext;
+
+    public OrderRepository(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    public void Add(Order order)
+    {
+        _dbContext.Orders.Add(order);
+    }
+
+    public async Task<Order> GetByIdAsync(Guid id)
+    {
+        return await _dbContext.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
+    }
+}`
+            }
+        ];
+
+        // DOM Elements
+        const navContainer = document.getElementById('layer-nav');
+        const emptyState = document.getElementById('empty-state');
+        const detailsContainer = document.getElementById('layer-details');
+        const panelTitle = document.getElementById('panel-title');
+        const panelDesc = document.getElementById('panel-desc');
+        const panelCode = document.getElementById('panel-code');
+
+        // Render Navigation
+        function init() {
+            architectureData.forEach(layer => {
+                const btn = document.createElement('div');
+                btn.className = 'layer-btn';
+                btn.id = `btn-${layer.id}`;
+                btn.innerHTML = `
+                    <h3>${layer.title}</h3>
+                    <p>${layer.summary}</p>
+                `;
+                
+                btn.addEventListener('click', () => selectLayer(layer.id));
+                navContainer.appendChild(btn);
+            });
+        }
+
+        // Handle Selection
+        function selectLayer(id) {
+            // Update active styling
+            document.querySelectorAll('.layer-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(`btn-${id}`).classList.add('active');
+
+            // Find data
+            const layerData = architectureData.find(l => l.id === id);
+
+            // Update DOM
+            emptyState.classList.add('hidden');
+            detailsContainer.classList.remove('hidden');
+            
+            panelTitle.textContent = layerData.title;
+            panelDesc.textContent = layerData.description;
+            panelCode.textContent = layerData.code;
+        }
+
+        // Initialize page
+        init();
+    </script>
+</body>
+</html>
